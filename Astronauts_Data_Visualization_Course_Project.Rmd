@@ -1,0 +1,508 @@
+---
+title: "Assignment 1 - Astronauts"
+author: "Bengusu Ozcan"
+date: '2021-02-17'
+output:
+  html_document:
+    df_print: paged
+---
+
+## Scenario
+
+![](https://static.scientificamerican.com/blogs/cache/file/1D4440C5-CD59-4A53-A23648FF2C7CD0DD_source.jpg)
+
+Imagine you are a data scientist at a respected media outlet -- say the "New York Times". Your editor wants to support the writing of a feature article about this year's [plans for the world’s first all-civilian mission to space by SpaceX](https://www.shift4.com/news/worlds-first-all-civilian-mission-to-space-will-usher-in-new-era-of-commercial-space-exploration/) provisionally entitled `Inspiration Space`. Your editor-in-chief asks you to analyze some data on the space missions that have been completed in the last 60 years. 
+
+Since there is **no way that all features of the data can be represented** in such a memo, feel free to pick and choose some patterns that would make for a good story -- outlining important patterns and presenting them in a visually pleasing way. 
+
+The full background and text of the story will be researched by a writer of the magazine -- your input should be based on the data and some common sense (i.e. no need to read up on this). It does help, however, to briefly describe what you are presenting and what it highlights.
+
+Provide **polished plots** that are refined enough to include in the magazine with very little further manipulation (already include variable descriptions [if necessary for understanding], titles, source [e.g. "Astronaut Database (Stavnichuk & Corlett 2020)"], right color, etc.) and are understandable to the average reader of the "New York Times". The design does not need to be NYTimes-like. Just be consistent.
+
+## Data
+
+We will be using the _Astronaut database_ (Stavnichuk & Corlett 2020) that contains publicly available information about all astronauts who participated in space missions before January 15, 2020. The provided information includes the full astronaut name, sex, date of birth, nationality, military status, a title and year of a selection program, and information about each mission completed by a particular astronaut such as a year, ascend and descend shuttle names, mission and extravehicular activity (EVAs) durations.
+
+The following variables are included:
+
+# `astronauts.csv`
+
+| variable                 | class     | description                                               |
+| :----------------------- | :-------- | --------------------------------------------------------- |
+| id                       | double    | ID                                                        |
+| number                   | double    | Number                                                    |
+| nationwide_number        | double    | Number within country                                     |
+| name                     | character | Full  name                                                |
+| original_name            | character | Name in original language                                 |
+| sex                      | character | Sex                                                       |
+| year_of_birth            | double    | Year of birth                                             |
+| nationality              | character | Nationality                                               |
+| military_civilian        | character | Military status                                           |
+| selection                | character | Name of selection program                                 |
+| year_of_selection        | double    | Year of selection program                                 |
+| mission_number           | double    | Mission number                                            |
+| total_number_of_missions | double    | Total number of missions                                  |
+| occupation               | character | Occupation                                                |
+| year_of_mission          | double    | Mission year                                              |
+| mission_title            | character | Mission title                                             |
+| ascend_shuttle           | character | Name of ascent shuttle                                    |
+| in_orbit                 | character | Name of spacecraft used in orbit                          |
+| descend_shuttle          | character | Name of descent shuttle                                   |
+| hours_mission            | double    | Duration of mission in hours                              |
+| total_hrs_sum            | double    | Total duration of all missions in hours                   |
+| eva_instances            | double    | Instances of EVA by mission                               |
+| eva_hrs_mission          | double    | Duration of extravehicular activities during the mission  |
+| total_eva_hrs            | double    | Total duration of all extravehicular activities in hours  |
+
+## Tasks
+
+#### 1. Age & Sex
+
+Visualize the information presented by the year of birth of astronauts. This could be their age when selected, their age during their first mission, or how old they were during their last mission (or all of these). This could also include who were the youngest or oldest astronauts, or which astronauts where active the longest. In addition, use the sex information on the astronauts for further differentiation.
+
+Create 2-3 charts in this section to highlight some important patterns. Make sure to use some variation in the type of visualizations. Briefly discuss which visualization you recommend to your editor and why.
+
+Discuss three specific design choices in these graphs that were influenced by your knowledge of the data visualization principles we discussed in the lectures.
+
+**1.1) Average Age at First Time in Space:** 
+
+Everyone is likely to have a curiosity to go to space, however only very few are brave, skillful or committed enough to pursue this career path. Over the years, maybe it requires more patience from the astronauts to get selected for a mission due to increased demand. The first chart calculates the average age of astronauts who are on their first mission evet and shows how this number changed over time. Indeed, we see that over time the average age for first time in the space increases. 
+
+I would recommend our editor to use a line chart for this visualization since line charts represent a trend over time better. First design principle I used here is labeling both the x and y axis clearly, as well as adding a title and a caption on the graph to leave as least effort as possible on the reader side in order to understand what the data represents.
+
+```{r}
+#reading the data file
+d <- read.csv('astronauts.csv')
+# uploading needed data libraries
+library(tidyverse) 
+library(scales) 
+library(ggthemes)
+#install.packages("dplyr")
+library(dplyr)
+
+#defining age at mission
+d$age_at_mission = d$year_of_mission - d$year_of_birth 
+
+#creating a data pipe to visualize average age of mission for the first missions over the years
+#adding axis labels
+(average_at_mission <- d %>%
+  group_by(year_of_mission) %>% 
+    filter(mission_number==1) %>% 
+  summarise(k=mean(age_at_mission))%>% 
+  ggplot(., aes(year_of_mission, k)) +
+  geom_line()+
+  labs(x = "Years of Space Missions", y = "Average Age of Astronauts at Their First Mission", 
+       title = "Average Age of First Space Mission Overtime",
+       caption = "Do you need to wait for longer to go on the space? In fact, average age for going on a space mission increases over time."))
+
+```
+
+Second design principle I will use is Gestalt's continuity principle which claims that the elements on a line together are perceived more continous and coherent to our eyes. With this in mind, the line chart reveals and overall increase, however has too many small ups and downs between the years. Our objective is to show the increase on the average age across years. Hence, I replaced the line plot with a smooth line plot below. It gives a more pleasant look and reduces the noise of small changes in the average age, emphasizing on the general increasing trend.
+
+Third design principle I use is to increase data-ink ratio. The purpose is similar to above, decrease the noise that grabs readers' attention and emphasize the trend. For this purpose, I removed the background filling and the grid. There is still a lot of blank space in this chart. However, I believe that the smooth line provides a catchy and aesthetic flow in readers' mind that could stick to mind. Therefore, I will leave this plot as such.
+
+
+```{r}
+#commenting geom_line and adding geom_shape instead
+#simplifying the chart by deleting background and adjusting the titles
+(average_at_mission <- d %>%
+  group_by(year_of_mission) %>% 
+    filter(mission_number==1) %>% 
+  summarise(k=mean(age_at_mission))%>% 
+  ggplot(., aes(year_of_mission, k)) +
+  #geom_line()+
+  geom_smooth(fill="transparent")+
+ labs(x ="Years of Space Missions", y = "Average Age of Astronauts at Their First Mission", 
+       title = "Average Age of First Space Mission Overtime",
+       subtitle = "Do you need to wait for longer to go on the space? In fact, average age for going on a space mission increases over time.")+theme_minimal()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+theme(plot.title = element_text(size = 10, face = "bold", hjust = 0.5), plot.subtitle = element_text(size = 8, hjust = 0.5)))
+
+```
+
+**1.2) Oldest Astronauts in Space:** 
+
+Is there an age limit to go in space? How old were the top 10 oldest female and male astronauts in space? How many times did they go in space?
+
+This chart shows that the oldest active astronauts were males. In fact, even the oldest female astronaut so far is younger than the 10th oldest male astronaut, which can be partially explained by the fact that there are more male astronauts than female astronauts. It is also interesting to see that there were astronauts who went in space in their 60s, and even one in their 70s, which may be considered quite old for some readers.
+
+Since we are looking at top instances, in other words a discrete X axis, I would recommend the editor to use a point chart. 
+
+On top of the design principles I mentioned in the first question, here I also used "preattentive visual properties" which helps readers' eyes and brain to pay attention to differences. For this purpose, I used color to categorize male and females. Moreover, I adjusted the size of the points according to age of the astronaut following the same principle. It grabs more attention to the fact that males are older than females and emphasize on the oldest astronaut. 
+
+
+```{r}
+
+#grouping data by sex and individual astronaut.
+#age_at_mission was already defined above. selecting the maximum one, which means the oldest they were in space
+#selecting the maximum number of mission number, which means how many times they have been to space
+d %>% 
+  group_by(name, sex) %>% 
+  summarise(max_age=max(age_at_mission), max_mission=max(mission_number)) %>% 
+  arrange(desc(max_age)) %>% 
+  group_by(sex) %>% 
+  mutate(rank=row_number()) %>% 
+  filter(rank <= 10) %>% 
+  ggplot(aes(max_age, max_mission))+
+  geom_point(aes(color=sex, size=max_age)) + theme_minimal() +  
+  labs(x ="Maximum Age of Astronauts When in Space", y = "Total Number of Space Missions", 
+       title = "Oldest Male and Female Astronauts Ever Sent to Space",
+       subtitle = "How many times have oldest astronauts been in space mission?")+theme_minimal()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+theme(plot.title = element_text(size = 10, face = "bold", hjust = 0.5), plot.subtitle = element_text(size = 8, hjust = 0.5))
+
+  
+```
+
+#### 2. Nationality
+
+For a long time, space exploration was a duel between two superpowers. But recently, other nations have entered the game as well. Use the information on the nationality of the astronauts to visualize some interesting patterns. Consider, for example, that the composition of shuttle missions has recently become mixed nationalities, something that was absent in earlier times. 
+
+Create 1-2 charts in this section to highlight the information on nationality. Make sure to use some variation in the type of visualizations. Briefly discuss which visualization you recommend to your editor and why.
+
+**2.1) Female and Male Astronauts by Country:** 
+
+Females historically have been underrepresented in many STEM jobs, including astronauts. This started to change. Let's see which nationalities have female astronauts and how their gender proportion of astronauts look.
+
+Due to high difference of the total number of astronauts across countries, bar chart leaves a big blank space.As we discussed in the class, one option is to change the scale or introduce a cut and jump on higher values on the y scale, however this introduces a disproportionate representation on the y value. After trying other tools that I learned boxplot and geom_point charts as well, I decided that the bar chart still shows the proportions most clearly. Since I want to emphasize the number of female astronauts still as "instances" rather than "bulk proportions" I would recommend my editor to use the bar chart as below. In order to improve the readability of the countries with smaller number of astronauts, I added the value labels for each bar.
+
+There is a big blank space on the stacked chart, which is not desirable. This space could be utilized by adding astronauts' pictures with informative facts, such as "Korea's one and only astronaut in space was a female!" I did not add it for now, imagining that we would learn such skills later on in the course.
+
+```{r}
+#since there are many countries with no female astronauts, filtering the countries that have at least one female astronaut
+#this excludes combined missions since there are no female astronauts in combined missions
+#I decided to exclude those astronauts since it is not possible to identify individual nationalities
+female_countries <- d %>% 
+  group_by(nationality) %>% 
+  filter(sex=='female') %>% 
+  select(nationality)
+
+#as.data.frame(distinct(female_countries)) checking our data frame
+
+#filtered the data for countries that have at least one female astronaut. grouped by nationality and sex
+d %>%
+  filter(nationality %in% female_countries$nationality) %>%
+  group_by(nationality, sex) %>%
+  summarize(count=n_distinct(name)) %>%
+  ggplot(aes(x = reorder(nationality, count), y=count, fill=sex))+
+  geom_bar(stat='identity', position="dodge") +
+  labs(x = "Countries with Female Astronauts Been to Space", y = "Number of Male and Female Astronauts",
+       title = "Which Countries Send More Female Astronauts to Space?", caption="Combined missions are excluded since the exact nationality of the astronauts are not known")+ #added caption to notify that combined missions are excluded
+  theme_minimal()+
+    geom_text(
+    aes(label = count),
+    colour = "black", size = 3,
+    vjust = 0.1, position = position_dodge(.9)) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+```
+**2.2) US vs. Russia on Space Exploration Over Time:** 
+
+We mentioned that Russia and US historically have been two rivals in space exploration. I would like to plot a time line for these two countries' total number of missions over time. This is rather a simple chart, but I believe that this is an information that many readers would be curious to see.
+
+I would recommend using a line chart. Unlike average age over time, this time it is helpful informaiton to see small ups and downs that may mark some historical changes in the politics, hence I would use line instead of smooth.
+
+This chart reveals an uptick of US' space missions in 1980s. Indeed, this is the time that Kennedy Government increased the number of missions ambitiously, which was also facilitated by the invention of TDS in NASA. There has also been a major fatal space accident in this time frame, however the invention of TDS is more relevant for this chart, hence I added that as a text box.
+
+```{r}
+
+#according to resources online, stringr was covered by tidyverse, but I wanted to make sure and installed the library
+#install.packages("stringr")
+library(stringr)
+
+#now this is not working
+(d %>% 
+  group_by(nationality, year_of_mission) %>% 
+  summarise(n=n_distinct(mission_title)) %>%
+  filter(str_detect(nationality, "U.S"))%>% 
+  ggplot(aes(year_of_mission,n))+
+      geom_line(aes(color=nationality)) +theme_minimal()+
+    labs(x = "Years", y = "Number of Space Missions",
+       title = "Mission Space Competition Between U.S. and Russia Over Time"))+
+theme_minimal()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+theme(plot.title = element_text(size = 10, face = "bold", hjust = 0.5), plot.subtitle = element_text(size = 8, hjust = 0.5)) +
+  geom_text(aes(label=ifelse(n==max(n),as.character("After NASA develops the Tracking and Data Relay Satellite"),'')),hjust=-0.1,vjust=3, size=2)
+
+
+```
+
+
+#### 3. Space walks
+
+Space walks, or extravehicular activities, are often the highlight of these missions. Wrangle the data to  create an overview of cumulative spacewalk records of individual astronauts (i.e. calculate the number and total duration of EVA by astronaut).
+
+Create 1-2 charts in this section to highlight some important patterns. Make sure to use some variation in the type of visualizations. Briefly discuss which visualization you recommend to your editor and why.
+
+**3.1) Occupation vs Space walks** 
+
+Which occupations make the space walk the most? Do readers know about the differences of different astronaut roles?
+
+We see that there is very different time spent on space walks across the different astronaut occupations. For someone who is not that familiar with these roles, it is very interesting. I would recommend using a bar chart to the editor for easier comparison and differentiate each role by the color code. I would get rid of the y axis text in order to save space since colors already stand for the occupations.
+
+```{r}
+#fixing occupation column due to one record with capital F flight engineer
+d$occupation = tolower(d$occupation)
+
+#I filtered the space missions for the ones that include space walks. Then I calculated the total space walks hour by occupation
+d %>% 
+   filter(eva_hrs_mission >0) %>% 
+   group_by(occupation) %>% 
+   summarise(sum=sum(total_eva_hrs)) %>% 
+   ggplot(aes(x =reorder(occupation,sum),y=sum, fill=occupation))+
+   geom_bar(stat='identity', color="white") +
+   theme_minimal()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  labs(title="Total Space Walk Hours per Astronaut Role", x="Astronaut Roles", y="Total Number of Hours Spent on Space Walk")+
+  theme(plot.title = element_text(size = 13, face = "bold", hjust = 0.3))+ 
+          theme(axis.text.y= element_blank()) + 
+          coord_flip()
+         
+
+```
+
+**3.2) Most Recent Space Walks** 
+
+For this task, I wanted to prepare a very simple chart representing only one value. After exploring couple of options, I realized that there was an increase in the space walks in the recent years. In order to show this trend, I would recommend using a line chart. 
+
+The reason that I kept the gridlines and not using colors or the additonal breakouts is that, I believe that this graph shows the decrease in space exploration by humans. Experts discuss that in recent years, the space investment shifted over to automation and civilian rocket manufacturing. There may be other underlying reasons, however I believe that this chart may support that trend in an article.
+
+I kept the same minimalistic theme and explanatory titles consistently with rest of my charts.
+
+```{r}
+d %>%
+   filter(eva_hrs_mission >0) %>%
+   group_by(year_of_mission) %>% 
+   summarise(tot=sum(total_eva_hrs)) %>% 
+   arrange(desc(year_of_mission)) %>%
+   mutate(time_order=row_number()) %>%
+   filter(time_order<=20) %>% 
+   ggplot(aes(x =year_of_mission,y=tot))+
+   geom_line() +theme_minimal() + 
+  labs(title="Total Space Walk Hours in Recent Years", x="Year", y="Total Number of Hours Spent on Space Walk")
+
+```
+
+
+#### 4. Your turn to choose
+
+There are few other variables that could make for an interesting story, for example military / civilian status, occupation, shuttle names, mission titles, length in orbit or average length of EVA activities (considering we now have permanent space stations) etc. Select some of these variables to tell a story of your selection.
+
+Create 2-3 charts in this section to highlight some important patterns. Make sure to use some variation in the type of visualizations. Briefly discuss which visualization you recommend to your editor and why.
+
+**3.1) Challenger Accident** 
+
+I would like to tell the story of astronauts from one of the most well known space disaster, the Challenger Accident. I looked up online for the mission title and filtered my data only for STS 51 L mission. 
+
+As I used before, I would recommend the editor to use point chart for this purpose. I used the age information both at the x axis and the point size, however I believe that using something else such as total hours etc conveyed too much information. Using the same data in two different places made it easier to understand. Since the names and the ages are clearly represented, I deleted the axis titles.
+
+```{r}
+#challenger accident is STS 51 L, so I filtered all the entries from the data
+#plotting the age at mission
+d %>% 
+  filter(mission_title == "STS-51-L"| mission_title=="STS-51L"| mission_title=="STS 51-L") %>% 
+  group_by(name) %>% 
+  ggplot(aes(x=age_at_mission, y=name), fill="sex")+
+  geom_point(aes(color=sex, size=age_at_mission)) + theme_minimal() +labs(title="Challenger Accident Astronauts")+ theme(plot.title = element_text(size = 9, face = "bold", hjust = 0.5))+ 
+          theme(axis.title.x = element_blank())+ 
+          theme(axis.title.y = element_blank())+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+```
+**3.2) Military vs Civilian Astronauts**
+
+Are there more civilian or military missions over time? 
+
+I used a line chart to show the missions where military or civilian astronauts were appointed. I would recommend a line chart in order to show the trend over time, however there is too much overplotting.
+
+```{r}
+#Grouped military and civilian astronauts per mission and filtered unique mission titles
+#this gives us the astronaut assignment per mission, whether it was military or civilian
+#since we do not have any other information e.g. funding, this is the closest labeling of whether a mission is military or civilian
+
+d %>% 
+  group_by(military_civilian, year_of_mission) %>%
+  summarise(n=n_distinct(mission_title)) %>% 
+  ggplot(aes(x=year_of_mission, y=n))+
+  geom_line(aes(color=military_civilian))+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+```
+Instead of a line plot, I used a bar plot which solved the problem of overfitting. There are too many bins which makes the data rather difficult to read. However, the military and civilian appointment changes are interestingly quite parallel to each other over time. Grouping the bins decreased the emphasis on this fact. Therefore, I preferred leaving the bins year by year. If possible, I would use a wider space on the article by consulting with the editor in order to keep all these bars and expand the horizontal area. This time I also kept the background grid 
+
+```{r}
+d %>% 
+  group_by(military_civilian, year_of_mission) %>%
+  summarise(n=n_distinct(mission_title)) %>%
+  ungroup() %>% 
+  ggplot(aes(x=year_of_mission, y=n, fill=military_civilian))+
+  geom_bar(stat='identity', position="dodge")+
+  theme_minimal()+
+  labs(title="Military and Civilian Astronaut Appointments", x="Year of Mission", y="Mission Appointments")+theme(plot.title = element_text(size = 13, face = "bold", hjust = 0.3))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  
+```
+
+**3.3) Top 10 Youngest Mission Crew** 
+
+Which mission has the youngest average crew age? Interestingly, all the top 10 youngest crews are from Russia missions.
+
+Some missions are only one person, which may be the average of the crew anyway. In order to reflect that nuance, I chose reflecting the size of the crew as well.
+
+I would recommend using a point chart since I am showing individual instances. I kept only one color for the consistency, since I am not reflecting any categorical difference such as nationality or gender. The size of the crew is already explained by the shape size. I also deleted the y axis since the mission names are clear.
+
+```{r}
+
+#grouped the data by mission title since all titles are unique
+#summarized the mean age for astronauts at that mission
+#arranged the data to get the youngest top 10 crew average
+d %>%
+  group_by(mission_title) %>% 
+  summarise(avg=mean(age_at_mission), n=n_distinct(name))%>% 
+  arrange(avg) %>% 
+  mutate(rank=row_number()) %>% 
+   filter(rank<=10) %>% 
+    ggplot(aes(mission_title, avg))+
+    geom_point(aes(size=n))+theme_minimal()+
+  coord_flip()+
+  labs(title="Youngest Mission Crews are from Russia", y="Average Age of the Mission Crew")+
+  theme(plot.title = element_text(size = 13, face = "bold", hjust = 0.3))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+theme(axis.title.y= element_blank())
+  
+  
+```
+
+
+### Interactivity
+
+#### 5. Make two plots interactive
+
+Choose 2 of the plots you created above and add interactivity. For at least one of these interactive plots, this should not be done through the use of `ggplotly`. Briefly describe to the editor why interactivity in these visualizations is particularly helpful for a reader.
+
+
+**5.1) Oldest Male and Female Astronauts** 
+
+Using ggplotly, I wanted to display the names of the astronauts from the oldest top 10 plot above. Since rest of the plot conveys numerical informations, I did not want to repeat it and only display the name of each astronaut. I kept the design principles same as the previous visualization.
+
+```{r}
+#install.packages("plotly", repos = "http://cran.us.r-project.org")
+library(plotly)
+
+b <- d %>% 
+  group_by(name, sex) %>% 
+  summarise(max_age=max(age_at_mission), max_mission=max(mission_number)) %>% 
+  arrange(desc(max_age)) %>% 
+  group_by(sex) %>% 
+  mutate(rank=row_number()) %>% 
+  filter(rank <= 10) %>% 
+  ggplot(aes(max_age, max_mission))+
+  geom_point(aes(color=sex, size=max_age)) + theme_minimal() +  
+  labs(x ="Maximum Age of Astronauts When in Space", y = "Total Number of Space Missions", 
+       title = "Oldest Male and Female Astronauts Ever Sent to Space",
+       subtitle = "How many times have oldest astronauts been in space mission?")+theme_minimal()+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+theme(plot.title = element_text(size = 10, face = "bold", hjust = 0.5), plot.subtitle = element_text(size = 8, hjust = 0.5))
+
+
+b <- d %>% 
+  group_by(name, sex) %>% 
+  summarise(max_age=max(age_at_mission), max_mission=max(mission_number)) %>% 
+  arrange(desc(max_age)) %>% 
+  group_by(sex) %>% 
+  mutate(rank=row_number()) %>% 
+  filter(rank <= 10) %>% 
+  ggplot(aes(max_age, max_mission))+
+  geom_point(aes(color=sex, size=max_age, label=name)) +  theme_minimal() +
+  labs(x ="Maximum Age of Astronauts When in Space", y = "Total Number of Space Missions", 
+       title = "Oldest Male and Female Astronauts Ever Sent to Space")+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  theme(plot.title = element_text(size = 10, face = "bold", hjust = 0.5))
+
+ggplotly(b, tooltip = "name")
+
+```
+**5.2) Spacewalk Hours by Occupation** 
+
+Using plotly, I recreated the space walk hours by occupation chart. I did not know about the different astronaut types and for me, it was interesting to learn that after leaving the earth, not all astronauts have the chance of doing a space walk. Hence, I wanted to convey readers what each of these missions are.
+
+I modified the infobox by showing a crisp definition of each occupation's definition. I kept the same design principles, except this time I used the same color coding for the chart. Different hover boxes already give additional information and labels convey the different occupation types. Therefore, I wanted to keep the visual design simpler.
+
+```{r}
+#creating a new object with necessary data filtering steps
+d$occupation = tolower(d$occupation)
+
+learn_occupations <- d %>% 
+   filter(eva_hrs_mission >0) %>% 
+   group_by(occupation) %>% 
+   summarise(sum=sum(total_eva_hrs))
+  
+#applying plotly syntax for the barchart            
+fig1 <- plot_ly(learn_occupations, x = ~sum , y = ~reorder(occupation, sum),
+              type = 'bar', orientation = 'h', text = c("Director of a mission, not leaving the vehicle as long as there are other astronauts appointed for the specific task.", "May leave the vehicle if the task is to fix an external part of the station.", "Mission specialists, trained for the particular task of the mission.", "Always controls the vehicle and almost never leaves the vehicle"), hoverinfo = 'text')
+              
+#adding visual design details and titles
+fig1 <- fig1 %>% layout(title = "Total Space Walk Hours per Astronaut Role",
+                        yaxis = list(title = FALSE, domain= c(10, 67)),
+                        xaxis = list(title = "Total Space Walk Hours per Astronaut Role"),
+                        margin = list( autoexpand = TRUE, t = 80, b = 90),
+                showarrow = F, xref='paper', yref='paper',
+                xanchor='right', yanchor='auto', xshift=0, yshift=0,
+                font=list(size=12))
+
+fig1
+```
+#### 6. Data Table
+
+To allow the reader to explore the record holding achievements of astronauts, aggregate the data by astronaut. Include the total number of missions, the total mission time, and anything else you consider useful to share and add a datatable to the output. Make sure the columns are clearly labeled. Select the appropriate options for the data table (e.g. search bar, sorting, column filters, in-line visualizations etc.). Suggest to the editor which kind of information you would like to provide in a data table and why.
+
+
+**6) Top 10 Youngest Mission Crew** 
+
+I would recommend the editor to use a button table for avoiding too much information. I believe that the reader would understand categorical information easier than the total time in space or similar numerical values. I decided to provide categorical information first and then use interactive buttons to hide the numerical information under each astronaut and displayed categorical information. I only relabeled military_civilian column from the categorical ones since the rest was more clear. I relabeled all the numerical columns. I kept the underscores and dots for re-usability of the code and also seeing more such "raw titles" in the articles these days.
+
+I imagine this table as a repository of the reader to play with data and explore, rather than giving a message. Hence I decided to arrange the data in alphabetical name order. We could also do so by age or active years by simply changing the arrange command.
+
+
+```{r}
+library(DT)
+
+#creating additional useful columns 
+#deleting the columns that I do not want to display 
+#renaming one column
+d$first_mission_age= ifelse(d$mission_number ==1, d$age_at_mission, NA)
+d$first_mission= ifelse(d$mission_number ==1, d$mission_title, NA)
+astro_table= select(d, -(id:nationwide_number), -(mission_title:hours_mission), -(eva_hrs_mission))
+names(astro_table)[names(astro_table) == "military_civilian"] <- "classification"
+
+#grouped the data by the categorical variables 
+#renamed numerical columns and calculated the sums of numerical values
+#created the data table
+(astro_table %>%
+  group_by(name, nationality, sex, occupation, year_of_birth, classification)%>% 
+    summarise(
+    Total.number.of.missions=sum(total_number_of_missions),
+    Total.spacewalk.hours=sum(total_eva_hrs),
+    Total.hours.in.mission=sum(total_hrs_sum),
+    Age.at.first.mission = mean(age_at_mission, na.rm = TRUE))%>% 
+    arrange(name)%>%
+      datatable(
+    rownames = FALSE,
+    filter = list(position = "top"),
+    options = list(
+      dom = "Bfrtip",
+      buttons = I("colvis"),
+      language = list(sSearch = "Filter:")
+    ),
+    extensions = c("Buttons", "Responsive")))
+                     
+```
+
+
+## Technical Details
+
+The data comes in a reasonably clean file. However, if you do find issues with the data, recode any values, etc. please make this clear in the code (and if significant add into the description).
+
+If needed for your visualization, you can add visual drapery like flag icons, space images etc. but you are certainly not obligated to do that. What is important, however, to *use a consistent style across all your visualizations*. 
+
+Part of the task will be transforming the dataset into a shape that allows you to plot what you want in     `ggplot2`. For some plots, you will necessarily need to be selective in what to include and what to leave out. 
+
+Make sure to use _at least_ three different types of graphs, e.g. line graphs, scatter, histograms, bar charts, dot plots, heat maps, etc.
+
+## Submission
+
+Please follow the [instructions](/Exercises/homework_submission_instructions.md) to submit your homework. The homework is due on Wednesday, February 17.
+
+## Please stay honest!
+
+Yes, this type of data has surely been analyzed before.  If you do come across something, please no wholesale copying of other ideas. We are trying to evaluate your abilities in using `ggplot2` and data visualization not the ability to do internet searches. Also, this is an individually assigned exercise -- please keep your solution to yourself!
+
+## Go to space yourself?
+
+Yes, you read that right. Shift4, a payment processing company, is raffling off seats to the first all-civilian space mission ever! With a worthy donation to St.Jude Children's Hospital, you can enter to win a seat for yourself. Find out more here: https://inspiration4.com/
